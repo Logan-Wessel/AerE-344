@@ -204,7 +204,7 @@ print(reynolds_numbers)
 
 ### PLOTTING ### 
 # Set to True to generate plots
-PLOT_FLAG = False
+PLOT_FLAG = True
 if PLOT_FLAG == True:
     plt.figure(1)
     plt.plot(airfoil_x, airfoil_y)
