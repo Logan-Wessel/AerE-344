@@ -15,7 +15,7 @@ VELOCITY_COEFF = 1.241              # dimensionless
 MOTOR_SPEED = 15                    # Hz
 DELTA_Y =  0.002                    # meters
 CHORD_LENGTH = 0.101                # meters
-DATA_PATH = os.path.join(os.getcwd(), 'AER E 344/Lab 6/Data')
+DATA_PATH = os.path.join(os.getcwd(), 'Data')
 
 # Stores all data obtained from lab setup
 data_collection = []
