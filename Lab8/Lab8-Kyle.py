@@ -38,7 +38,10 @@ pressure_averages_between_probes = []
 velocities_per_y = [] # m/s
 # Store velocity in the test section
 test_section_velocity = (4.713  * MOTOR_SPEED - 1.7961) / 2.237 # m/s
-# print(test_section_velocity)
+test_section_velocity_pitot = np.sqrt(((TOTAL_PRESSURE - STATIC_PRESSURE) * 2) / DENSITY) # m/s
+print(f"motor speed calibration: {test_section_velocity} m/s")
+print(f"pitot tube: {test_section_velocity_pitot} m/s")
+test_section_velocity = test_section_velocity_pitot
 
 # Stores c_d per run using summation of integral terms
 c_d = []
@@ -117,14 +120,16 @@ for run in range(len(data_collection)):
         x2 = 92 # mm
         velocities_per_y[run][probe] = y1 + (((y_values_mm[probe] - x1) * (y2 - y1)) / (x2 - x1))
 
+
 # '''
 # This should print all the probes where the velocity is >= 99% free stream
 for i in range(11):
     for j in range(len(velocities_per_y[0])):
         if float(velocities_per_y[i][j]) >= (test_section_velocity * .99):
             print(f"i run {i},j probe {j} @ {y_values_mm[j]} mm, vel: {velocities_per_y[i][j]} >=")
-
+    print("")
 # '''
+
 
 # '''
 for i in range(12, 21):
@@ -133,6 +138,7 @@ for i in range(12, 21):
             print(f"i run {i},k probe {k} @ {y_values_mm[k]} mm, vel: {velocities_per_y[i][k]} >=")
     print("")
 # '''
+
 
 velocities_norm = []
 
@@ -169,6 +175,7 @@ U_infinity = [test_section_velocity] * len(y_values_mm)
 
 def plot_velocity():
     for run in range(11):
+        plt.figure(run)
         plt.plot(velocities_per_y[run], y_values_mm)
         plt.plot(U_infinity, y_values_mm)
         plt.suptitle("Velocity vs y Distance from the Plate")
@@ -179,6 +186,7 @@ def plot_velocity():
         plt.show()
 
     for run in range(12, 21):
+        plt.figure(run)
         plt.plot(velocities_per_y[run], y_values_mm)
         plt.plot(U_infinity, y_values_mm)
         plt.suptitle("Velocity vs Distance from the Front of the Plate")
@@ -191,6 +199,7 @@ def plot_velocity():
 
 def plot_norm_velocity():
     for run in range(11):
+        plt.figure(run)
         plt.plot(velocities_norm[run], y_values_mm)
         plt.suptitle("Normalized Velocity vs y Distance from the Plate")
         plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
@@ -200,6 +209,7 @@ def plot_norm_velocity():
         plt.show()
 
     for run in range(12, 21):
+        plt.figure(run)
         plt.plot(velocities_norm[run], y_values_mm)
         plt.suptitle("Normalized Velocity vs Distance from the Front of the Plate")
         plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
@@ -231,16 +241,16 @@ def plot_theoretical_boundary():
 
 
 def plot_momentum_thickness():
-    plt.plot(x_values_mm, momentum_thickness)
+    plt.plot(x_values, momentum_thickness)
     plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
-    plt.xlabel("x distance (mm)")
+    plt.xlabel("x distance (m)")
     plt.ylabel("Momentum Thickness")
     plt.grid()
     plt.show()
 
 if len(sys.argv) > 1:
     if sys.argv[1] == 'p':
-        # plot_velocity()
-        # plot_norm_velocity()
+        plot_velocity()
+        plot_norm_velocity()
         plot_theoretical_boundary()
         plot_momentum_thickness()
