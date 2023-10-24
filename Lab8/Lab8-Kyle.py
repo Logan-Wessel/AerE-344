@@ -2,6 +2,7 @@
 #Kyle Younge
 
 import os
+import sys
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -25,6 +26,7 @@ TOTAL_PRESSURE = -2.60641           # Pa
 STATIC_PRESSURE = -81.6712          # Pa
 RE_TRANSITION = 5 * 10**5
 
+
 # Stores all data obtained from lab setup
 data_collection = []
 
@@ -35,7 +37,8 @@ pressure_averages_between_probes = []
 # Stores velocity between probes
 velocities_per_y = [] # m/s
 # Store velocity in the test section
-test_section_velocity = 4.713  * MOTOR_SPEED - 1.7961
+test_section_velocity = (4.713  * MOTOR_SPEED - 1.7961) / 2.237 # m/s
+# print(test_section_velocity)
 
 # Stores integral terms for computing c_d
 integral_terms = []
@@ -93,27 +96,53 @@ if True:
             temp.append(np.sqrt(pressure_averages_between_probes[run][probe] * 2 / DENSITY))
 
         velocities_per_y.append(temp)
-    print(velocities_per_y[1])
-    
-    
-    for run in range(11):
-            # c_p graphs
-            plt.figure(run)
-            plt.plot(velocities_per_y[run], y_values_mm)
-            plt.suptitle("Velocity vs y Distance from the Plate")
-            plt.title(f"Distance from Front of Plate: {run*25.4} mm")
-            plt.ylabel("y distance (mm)")
-            plt.xlabel("Velocity (m/s)")
-            plt.grid()
-            plt.show()
 
-    for run in range(12,22):
-            # c_p graphs
-            plt.figure(run)
-            plt.plot(velocities_per_y[run], y_values_mm)
-            plt.suptitle("Velocity vs Distance from the Front of the Plate")
-            plt.title(f"Distance from Front of Plate: {279.4 + (run - 11) * 5 * 25.4} mm")
-            plt.ylabel("y distance (mm)")
-            plt.xlabel("Velocity (m/s)")
-            plt.grid()
-            plt.show()
+    # print(velocities_per_y[1])
+    # print(len(velocities_per_y))
+    
+    # '''
+    # This should print all the probes where the velocity is >= 99% free stream
+    for i in range(11):
+        for j in range(len(velocities_per_y[0])):
+            if float(velocities_per_y[i][j]) >= (test_section_velocity * .99):
+                print(f"i run {i},j probe {j} @ {y_values_mm[j]} mm, vel: {velocities_per_y[i][j]} >=")
+        print("")
+
+    # '''
+    for i in range(12, 21):
+        for k in range(len(velocities_per_y[0])):
+            if float(velocities_per_y[i][k]) >= (test_section_velocity * .99):
+                print(f"i run {i},k probe {k} @ {y_values_mm[k]} mm, vel: {velocities_per_y[i][k]} >=")
+        print("")
+    # '''
+
+    U_infiniy = [test_section_velocity] * 35
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'p':
+
+            for run in range(11):
+                    # c_p graphs
+                    plt.figure(run)
+                    plt.plot(velocities_per_y[run], y_values_mm)
+                    plt.plot(U_infiniy, y_values_mm)
+                    plt.suptitle("Velocity vs y Distance from the Plate")
+                    plt.title(f"Distance from Front of Plate: {run*25.4} mm")
+                    plt.ylabel("y distance (mm)")
+                    plt.xlabel("Velocity (m/s)")
+                    plt.grid()
+                    plt.show()
+
+            # '''
+            for run in range(12, 21):
+                    # c_p graphs
+                    plt.figure(run)
+                    plt.plot(velocities_per_y[run], y_values_mm)
+                    plt.plot(U_infiniy, y_values_mm)
+                    plt.suptitle("Velocity vs Distance from the Front of the Plate")
+                    plt.title(f"Distance from Front of Plate: {279.4 + (run - 11) * 5 * 25.4} mm")
+                    plt.ylabel("y distance (mm)")
+                    plt.xlabel("Velocity (m/s)")
+                    plt.grid()
+                    plt.show()
+            # '''
