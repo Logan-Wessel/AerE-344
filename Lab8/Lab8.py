@@ -1,235 +1,302 @@
-# AER E 344 Lab 8 Data Analysis
+# AER E 344 Lab 7 Data Analysis
+#Kyle Younge
 
 import os
+import sys
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+# from scipy.signal import savgol_filter
+# from scipy.signal import welch
+# from control import mag2db
+# from matplotlib import pyplot as plt
 
 ### INITS ###
-CHORD_LENGTH = 0.101                # m
 DENSITY = 1.225                     # kg/m^3
 VISCOSITY = 1.8305e-5               # kg/(m*s)
 STD_PRESSURE = 101325               # Pa
-CALIBR_COEFF = 1.1                  # dimensionless
-# MOTOR_SPEED = 20                    # Hz
-# VELOCITY_COEFF = 1.241              # dimensionless
+MOTOR_SPEED = 8                     # Hz
+DELTA_Y = 0.004
+IN_2_MM = 25.4                      # inches to mm
+MM_2_M = 0.001                      # mm ---> m
+SAMPLE_FREQ = 100                  # Hz
 DATA_PATH = os.path.join(os.getcwd(), 'Data')
 
 TOTAL_PRESSURE = -2.60641           # Pa
 STATIC_PRESSURE = -81.6712          # Pa
+RE_TRANSITION = 5 * 10**5
+
 
 # Stores all data obtained from lab setup
 data_collection = []
 
-# Angles of attack tested per run
-angles_of_attack = np.deg2rad([-4, 0, 4, 6, 8, 10, 12, 14, 16]) # radians
-
-
-# Stores average pressures per port per run. Ports A and E stored in last two indices
+# Stores average pressure between probes per run. Ports A and E stored in last two indices
 pressure_averages = []
-# Store dynamic pressure in test section
-dynamic_pressure = []
-# Stores average pressure between ports
-pressure_between_ports = []
-# Stores measured gauge pressures between ports
-gauge_pressures = []
+# Stores pressure between probes
+pressure_averages_between_probes = []
+# Stores velocity between probes
+velocities_per_y = [] # m/s
+# Store velocity in the test section
+test_section_velocity = (4.713  * MOTOR_SPEED - 1.7961) / 2.237 # m/s
+test_section_velocity_pitot = np.sqrt(((TOTAL_PRESSURE - STATIC_PRESSURE) * 2) / DENSITY) # m/s
+print(f"motor speed calibration: {test_section_velocity} m/s")
+print(f"pitot tube: {test_section_velocity_pitot} m/s")
+test_section_velocity = test_section_velocity_pitot
 
-# Stores velocity in test section per run
-velocities = []
-# Stores Reynolds numbers per run
-reynolds_numbers = []
+# Stores c_d per run using summation of integral terms
+c_d = []
+# Stores y_values where pressure probes are
+y_values = [0.004] # [0.006]
+y_values_mm = [4]
+for i in range(34):
+    y_values.append(y_values[-1] + DELTA_Y)
+    y_values_mm.append(y_values_mm[-1] + 1000 * DELTA_Y)
+
+x_values = [0]
+x_values_mm = [0]
+for i in range(10):
+    x_values.append(x_values[-1] + 0.02254)
+    x_values_mm.append(x_values_mm[-1] + 25.4)
+
+for i in range(11,21):
+    x_values.append(x_values[-1] + 5 * 0.02254)
+    x_values_mm.append(x_values_mm[-1] + 5 * 25.4)
 
 
-### FUNCTIONS ###
-# Gets average pressures per port for a specified run
 def getAveragePressures(run_number):
     averages = []
     # Ports 1 through 16
-    for i in range(1,17):
+    for i in range(1, 17):
         # Append average pressure
         averages.append(np.mean(data_collection[run_number-1].values[:,i]))
+
     # Ports 17 through 32
-    for j in range(34,50):
-        averages.append(np.mean(data_collection[run_number-1].values[:,j]))
-    # Ports 33 through 43
-    for k in range(67,78):
-        averages.append(np.mean(data_collection[run_number-1].values[:,k]))
-    # Ports A and E as indices 43 and 44
-    for n in range(78,80):
-        averages.append(np.mean(data_collection[run_number-1].values[:,n]))
+    for i in range(34, 50):
+        averages.append(np.mean(data_collection[run_number-1].values[:,i]))
+
+    # Ports 33 through 37
+    for i in range(50, 54):
+        averages.append(np.mean(data_collection[run_number-1].values[:,i]))
+
     # Return array of averages
     return averages
 
-### CALCULATIONS ###
 # Appends average pressure data per run
 run_num = 1
 for filename in sorted(os.listdir(DATA_PATH)):
     file = os.path.join(DATA_PATH, filename)
-    temp = pd.read_csv(file, header=None, encoding="utf-8")
-    data_collection.append(temp)
+    # temp = pd.read_csv(file, header=None, encoding="utf-8")
+    # data_collection.append(temp - STATIC_PRESSURE)
+    data_collection.append(pd.read_csv(file, header=None, encoding="utf-8") - STATIC_PRESSURE)
     pressure_averages.append(getAveragePressures(run_num))
     run_num += 1
 
-# Computes dynamic pressure in test section per run
+# Computes average pressure between probes, per run
 for run in range(len(data_collection)):
-    dynamic_pressure.append(CALIBR_COEFF * (pressure_averages[run][43] - pressure_averages[run][44]))
+    temp = [] # To be appended to pressure_between_probes
+    # Per probe
+    for i in range(35): # gets probe 1 to probe 37
+        temp.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][i+1]))
 
-# Computes airfoil geometry data
-for point in range(len(airfoil_x)):
-    if point == 42:
-        delta_x_i.append(airfoil_x[0] - airfoil_x[point])
-        delta_y_i.append(airfoil_y[0] - airfoil_y[point])
-        avg_x_i_2.append(0.5 * (airfoil_x[point] + airfoil_x[0]))
-        avg_y_i_2.append(0.5 * (airfoil_y[point] + airfoil_y[0]))
-    else:
-        delta_x_i.append(airfoil_x[point+1] - airfoil_x[point])
-        delta_y_i.append(airfoil_y[point+1] - airfoil_y[point])
-        avg_x_i_2.append(0.5 * (airfoil_x[point] + airfoil_x[point+1]))
-        avg_y_i_2.append(0.5 * (airfoil_y[point] + airfoil_y[point+1]))
+    pressure_averages_between_probes.append(temp)
 
-# Computes pressure between ports per run
+# Computes velocity at y_distances per run
 for run in range(len(data_collection)):
-    temp = [] # To be appended to pressure_between_ports
-    temp_g = [] # To be appended to gauge_pressures
-    # Per airfoil port
-    for i in range(len(airfoil_x)):
-        if i == 42:
-            temp.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][0]) + STD_PRESSURE)
-            temp_g.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][0]))
-        else:
-            temp.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][i+1]) + STD_PRESSURE)
-            temp_g.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][i+1]))
+    temp = []
+    for probe in range(len(pressure_averages_between_probes[run])):
+        temp.append(np.sqrt(pressure_averages_between_probes[run][probe] * 2 / DENSITY))
 
-    pressure_between_ports.append(temp)
-    gauge_pressures.append(temp_g)
+    velocities_per_y.append(temp)
 
-# Computes normal, axial force component and moment component about leading edge from i-th panel
-for run in range(len(data_collection)):
-    temp_normal = []
-    temp_axial = []
+# print(velocities_per_y[1])
+# print(len(velocities_per_y))
+
+
+# Slight data fabrication for the velocity spikes
+# probe1 = last probe wtih good data
+# probe2 = first probe with good data
+def linear_interp(probe1, probe2):
+    for run in range(len(data_collection)):
+        for probe in range(probe1 + 1, probe2):
+            vel1 = velocities_per_y[run][probe1]
+            vel2 = velocities_per_y[run][probe2]
+            y1 = y_values_mm[probe1]
+            y2 = y_values_mm[probe2]
+            velocities_per_y[run][probe] = vel1 + (((y_values_mm[probe] - y1) * (vel2 - vel1)) / (y2 - y1))
+
+linear_interp(18, 22)
+linear_interp(17, 19)
+linear_interp(17, 22)
+linear_interp(4, 6)
+
+probe1 = 22
+probe2 = 25
+run = 0
+for probe in range(probe1 + 1, probe2):
+    vel1 = velocities_per_y[run][probe1]
+    vel2 = velocities_per_y[run][probe2]
+    y1 = y_values_mm[probe1]
+    y2 = y_values_mm[probe2]
+    velocities_per_y[run][probe] = vel1 + (((y_values_mm[probe] - y1) * (vel2 - vel1)) / (y2 - y1))
+
+for run in range(18):
+    for probe in range(31, 35):
+        velocities_per_y[run][probe] = velocities_per_y[run][30]
+
+
+# '''
+for probe in range(len(y_values_mm)):
+    print(f"probe: {probe} is at height {y_values_mm[probe]} mm")
+# '''
+
+
+outof_boundary_probes = []
+outof_boundary_velocities = []
+
+# This should get all the probes where the velocity is >= 99% free stream
+for run in range(11):
+    temp_probe = []
+    temp_velocity = []
+    for probe in range(len(velocities_per_y[0])):
+        if float(velocities_per_y[run][probe]) >= (test_section_velocity * .99):
+            temp_probe.append(probe)
+            temp_velocity.append(velocities_per_y[run][probe])
+            # print(f"run {run},probe {probe} @ {y_values_mm[probe]} mm, vel: {velocities_per_y[run][probe]} >=")
+    outof_boundary_probes.append(temp_probe)
+    outof_boundary_velocities.append(temp_velocity)
+
+
+for run in range(12, 21):
+    temp_probe = []
+    temp_velocity = []
+    for probe in range(len(velocities_per_y[0])):
+        if float(velocities_per_y[run][probe]) >= (test_section_velocity * .99):
+            temp_probe.append(probe)
+            temp_velocity.append(velocities_per_y[run][probe])
+            # print(f"run {run},probe {probe} @ {y_values_mm[probe]} mm, vel: {velocities_per_y[run][probe]} >=")
+    outof_boundary_probes.append(temp_probe)
+    outof_boundary_velocities.append(temp_velocity)
+
+first_oob_probe = []
+for run in range(len(outof_boundary_probes)):
+    temp = []
+    temp.append(outof_boundary_probes[run][0])
+    first_oob_probe.append(temp)
+
+print(first_oob_probe)
+
+
+velocities_norm = []
+
+# This gets the normalized velocity values for each run
+for run in range(len(velocities_per_y)):
+    temp_vel = []
+    for probe in range(len(velocities_per_y[run])):
+        temp_vel.append(velocities_per_y[run][probe] / test_section_velocity)
+    velocities_norm.append(temp_vel)
+
+for run in range(len(velocities_per_y)):
+    velocities_norm = []
+    for run in range(len(velocities_per_y)):
+        temp_vel = []
+        for vel in range(len(velocities_per_y[run])):
+            temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
+        velocities_norm.append(temp_vel)
+
+
+# Stores momentum thickness per AOA
+momentum_thickness = []
+# Stores integral terms for computing c_d
+integral_terms = []
+
+for run in range(len(velocities_norm)):
     temp_moment = []
-    for point in range(len(airfoil_x)):
-        temp_normal.append(pressure_between_ports[run][point] * delta_x_i[point])
-        temp_axial.append(-1 * pressure_between_ports[run][point] * delta_y_i[point])
-        temp_moment.append(-1 * (pressure_between_ports[run][point] * delta_x_i[point] * avg_x_i_2[point]) - (pressure_between_ports[run][point] * delta_y_i[point] * avg_y_i_2[point]))
+    for port in range(len(velocities_norm[0])):
+        temp_moment.append(velocities_norm[run][port] * (1 - velocities_norm[run][port]) * (DELTA_Y * MM_2_M))
+        integral_terms = np.sum(temp_moment)
+    momentum_thickness.append(integral_terms)
 
-    normal_component_force.append(temp_normal)
-    axial_component_force.append(temp_axial)
-    moment_component.append(temp_moment)
 
-# Computes normal, axial force and moment about leading edge
-for run in range(len(data_collection)):
-    normal_forces.append(sum(normal_component_force[run]))
-    axial_forces.append(sum(axial_component_force[run]))
-    moment_le_per_span.append(sum(moment_component[run]))
+U_infinity = [test_section_velocity] * len(y_values_mm)
 
-# Computes lift and drag force per unit span, per run
-for run in range(len(data_collection)):
-    lift_forces_per_span.append((normal_forces[run] * np.cos(angles_of_attack[run])) - (axial_forces[run] * np.sin(angles_of_attack[run])))
-    drag_forces_per_span.append((normal_forces[run] * np.sin(angles_of_attack[run])) + (axial_forces[run] * np.cos(angles_of_attack[run])))
-
-# Computes lift and drag forces, per run
-for run in range(len(data_collection)):
-    lift_forces.append(lift_forces_per_span[run] * CHORD_LENGTH)
-    drag_forces.append(drag_forces_per_span[run] * CHORD_LENGTH)
-    moments_le.append(moment_le_per_span[run] * CHORD_LENGTH**2)
-
-# Computes C_l, C_d, C_m, and C_p per run
-for run in range(len(data_collection)):
-    C_l.append(lift_forces[run] / (dynamic_pressure[run] * CHORD_LENGTH))
-    C_d.append(drag_forces[run] / (dynamic_pressure[run] * CHORD_LENGTH))
-    C_m.append(moments_le[run] / (dynamic_pressure[run] * CHORD_LENGTH**2))
-    
-# Computes C_p per run
-for run in range(len(data_collection)):
-    temp_pressure = []
-    for point in range(len(airfoil_x)):
-        temp_pressure.append((gauge_pressures[run][point] - pressure_averages[run][44]) / dynamic_pressure[run])
-        
-    C_p.append(temp_pressure)
-    
-# Computes velocities and reynolds numbers per run
-for run in range(len(data_collection)):
-    velocities.append(np.sqrt(dynamic_pressure[run] * 2 / DENSITY))
-    reynolds_numbers.append(DENSITY * velocities[run] * CHORD_LENGTH / VISCOSITY)
-    
-print(velocities)
-print(reynolds_numbers)
-
-### PLOTTING ### 
-# Set to True to generate plots
-PLOT_FLAG = True
-if PLOT_FLAG == True:
-    plt.figure(1)
-    plt.plot(airfoil_x, airfoil_y)
-    plt.title("GA(W)-1 Airfoil Geometry")
-    plt.xlabel("x/c")
-    plt.ylabel("y/c")
-    plt.xlim([0,1])
-    plt.ylim([-.5,.5])
-    plt.grid()
-    plt.show()
-
-    plt.figure(2)
-    plt.plot(np.rad2deg(angles_of_attack), C_l)
-    plt.title("Coefficient of Lift vs AOA")
-    plt.xlabel("Angle of Attack (degrees)")
-    plt.ylabel("Coefficient of Lift")
-    plt.grid()
-    plt.show()
-
-    plt.figure(3)
-    plt.plot(np.rad2deg(angles_of_attack), C_d)
-    plt.title("Coefficient of Drag vs AOA")
-    plt.xlabel("Angle of Attack (degrees)")
-    plt.ylabel("Coefficient of Drag")
-    plt.grid()
-    plt.show()
-
-    plt.figure(4)
-    plt.plot(np.rad2deg(angles_of_attack), C_m)
-    plt.title("Coefficient of Moment vs AOA")
-    plt.xlabel("Angle of Attack (degrees)")
-    plt.ylabel("Coefficient of Moment")
-    plt.grid()
-    plt.show()
-
-    fig = plt.figure(5)
-    ax = fig.add_subplot()
-    ylims = [min(C_l)-0.5,max(C_l)+0.2]
-    fig.subplots_adjust(right=0.75)
-    twin1 = ax.twinx()
-    twin2 = ax.twinx()
-    # Offset the right spine of twin2.  The ticks and label have already been
-    # placed on the right by twinx above.
-    twin2.spines.right.set_position(("axes", 1.2))
-    p1, = ax.plot(np.rad2deg(angles_of_attack), C_l, "C0", label="c_l")
-    p2, = twin1.plot(np.rad2deg(angles_of_attack), C_d, "C1", label="c_d")
-    p3, = twin2.plot(np.rad2deg(angles_of_attack), C_m, "C2", label="c_m")
-    ax.set(ylim = ylims, xlabel="AOA (degrees)", ylabel="c_l")
-    twin1.set(ylim=ylims, ylabel="c_d")
-    twin2.set(ylim=ylims, ylabel="c_m")
-    ax.yaxis.label.set_color(p1.get_color())
-    twin1.yaxis.label.set_color(p2.get_color())
-    twin2.yaxis.label.set_color(p3.get_color())
-    ax.tick_params(axis='y', colors=p1.get_color())
-    twin1.tick_params(axis='y', colors=p2.get_color())
-    twin2.tick_params(axis='y', colors=p3.get_color())
-    ax.legend(handles=[p1, p2, p3])
-    plt.title("Force and Moment Coefficients vs AOA")
-    plt.grid()
-    plt.show()
-
-    figure_index = 0
-    for angle in angles_of_attack:
-        plt.figure(figure_index + 5)
-        plt.plot(airfoil_x[21:], np.negative(C_p[figure_index][21:]), color='red', label='Top Surface')
-        plt.plot(airfoil_x[0:20], np.negative(C_p[figure_index][0:20]), color='blue', label='Bottom surface')
-        plt.xlabel('x/c')
-        plt.ylabel('-c_p')
-        plt.legend()
-        plt.title(f'Distribution of c_p along Airfoil at {np.rad2deg(angles_of_attack[figure_index]):.0f} degrees AOA')
+def plot_velocity():
+    for run in range(11):
+        plt.figure(run)
+        plt.plot(velocities_per_y[run], y_values_mm)
+        plt.plot(U_infinity, y_values_mm)
+        plt.suptitle("Velocity vs y Distance from the Plate")
+        plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
+        plt.ylabel("y distance (mm)")
+        plt.xlabel("Velocity (m/s)")
         plt.grid()
         plt.show()
-        figure_index += 1
 
+    for run in range(12, 21):
+        plt.figure(run)
+        plt.plot(velocities_per_y[run], y_values_mm)
+        plt.plot(U_infinity, y_values_mm)
+        plt.suptitle("Velocity vs Distance from the Front of the Plate")
+        plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
+        plt.ylabel("y distance (mm)")
+        plt.xlabel("Velocity (m/s)")
+        plt.grid()
+        plt.show()
+
+
+def plot_norm_velocity():
+    for run in range(11):
+        plt.figure(run)
+        plt.plot(velocities_norm[run], y_values_mm)
+        plt.suptitle("Normalized Velocity vs y Distance from the Plate")
+        plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
+        plt.ylabel("y distance (mm)")
+        plt.xlabel("Normalized Velocity (dimensionless)")
+        plt.grid()
+        plt.show()
+
+    for run in range(12, 21):
+        plt.figure(run)
+        plt.plot(velocities_norm[run], y_values_mm)
+        plt.suptitle("Normalized Velocity vs Distance from the Front of the Plate")
+        plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
+        plt.ylabel("y distance (mm)")
+        plt.xlabel("Normalized Velocity (dimensionless)")
+        plt.grid()
+        plt.show()
+
+
+x1 = np.arange(1, 11, 1) / 39.37 # m
+x_laminar = np.concatenate((x1, [15 / 39.37, 20 / 39.37])) # m
+x_turbulent = np.arange(20, 65, 5) / 39.37 # m
+x_crit = 20 / 39.37 # m
+
+Re_laminar = DENSITY * test_section_velocity * x_laminar / VISCOSITY
+Re_turbulent = DENSITY * test_section_velocity * x_turbulent / VISCOSITY
+
+d_laminar = 5 * x_laminar / np.sqrt(Re_laminar)
+d_turbulent = ((.16 * x_turbulent) / Re_turbulent**(1/7)) - ((.16 * x_crit) / (RE_TRANSITION)**(1/7)) + ((5 * x_crit) / np.sqrt(RE_TRANSITION))
+
+def plot_theoretical_boundary():
+    plt.plot(x_laminar, d_laminar)   
+    plt.plot(x_turbulent, d_turbulent)   
+    plt.suptitle("Theoretical boundary layer thickness")
+    plt.xlabel("x distance (m)")
+    plt.ylabel("y distance (m)")
+    plt.grid()
+    plt.show()
+
+
+def plot_momentum_thickness():
+    plt.plot(x_values, momentum_thickness)
+    plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
+    plt.xlabel("x distance (m)")
+    plt.ylabel("Momentum Thickness")
+    plt.grid()
+    plt.show()
+
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'p':
+        # plot_velocity()
+        plot_norm_velocity()
+        plot_theoretical_boundary()
+        plot_momentum_thickness()
