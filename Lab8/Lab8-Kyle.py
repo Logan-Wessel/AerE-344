@@ -34,7 +34,8 @@ pressure_averages_between_probes = []
 # Stores velocity between probes
 velocities_per_y = [] # m/s
 # Store velocity in the test section
-test_section_velocity = 4.713  * MOTOR_SPEED - 1.7961
+test_section_velocity = ((4.713  * MOTOR_SPEED) - 1.7961) / 2.237
+print(f"U_infinity = {test_section_velocity} m/s")
 
 # Stores integral terms for computing c_d
 integral_terms = []
@@ -81,9 +82,9 @@ if True:
         temp = [] # To be appended to pressure_between_probes
         # Per probe
         for i in range(35): # gets probe 1 to probe 37
-            print(i)
-            print(pressure_averages[run][i])
-            print(f"{pressure_averages[run][i+1]}\n\n")
+            # print(i)
+            # print(pressure_averages[run][i])
+            # print(f"{pressure_averages[run][i+1]}\n\n")
             temp.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][i+1]))
 
         pressure_averages_between_probes.append(temp)
@@ -96,3 +97,4 @@ if True:
 
         velocities_per_y.append(temp)
 
+    
