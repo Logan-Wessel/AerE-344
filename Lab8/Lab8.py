@@ -65,7 +65,7 @@ def getAveragePressures(run_number):
 run_num = 1
 for filename in sorted(os.listdir(DATA_PATH)):
     file = os.path.join(DATA_PATH, filename)
-    temp = pd.read_csv(file, header=None, encoding="us-ascii")
+    temp = pd.read_csv(file, header=None, encoding="utf-8")
     data_collection.append(temp)
     pressure_averages.append(getAveragePressures(run_num))
     run_num += 1
