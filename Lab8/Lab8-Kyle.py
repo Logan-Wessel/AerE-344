@@ -111,38 +111,84 @@ for run in range(len(data_collection)):
 # print(velocities_per_y[1])
 # print(len(velocities_per_y))
 
-# Slight data fabrication for the velocity spikes on probes 19-21
-for run in range(len(data_collection)):
-    for probe in range(19, 22):
-        y1 = velocities_per_y[run][18]
-        y2 = velocities_per_y[run][22]
-        x1 = 76 # mm
-        x2 = 92 # mm
-        velocities_per_y[run][probe] = y1 + (((y_values_mm[probe] - x1) * (y2 - y1)) / (x2 - x1))
+
+# Slight data fabrication for the velocity spikes
+# probe1 = last probe wtih good data
+# probe2 = first probe with good data
+def linear_interp(probe1, probe2):
+    for run in range(len(data_collection)):
+        for probe in range(probe1 + 1, probe2):
+            vel1 = velocities_per_y[run][probe1]
+            vel2 = velocities_per_y[run][probe2]
+            y1 = y_values_mm[probe1]
+            y2 = y_values_mm[probe2]
+            velocities_per_y[run][probe] = vel1 + (((y_values_mm[probe] - y1) * (vel2 - vel1)) / (y2 - y1))
+
+linear_interp(18, 22)
+linear_interp(17, 19)
+linear_interp(17, 22)
+linear_interp(4, 6)
+
+probe1 = 22
+probe2 = 25
+run = 0
+for probe in range(probe1 + 1, probe2):
+    vel1 = velocities_per_y[run][probe1]
+    vel2 = velocities_per_y[run][probe2]
+    y1 = y_values_mm[probe1]
+    y2 = y_values_mm[probe2]
+    velocities_per_y[run][probe] = vel1 + (((y_values_mm[probe] - y1) * (vel2 - vel1)) / (y2 - y1))
+
+for run in range(18):
+    for probe in range(31, 35):
+        velocities_per_y[run][probe] = velocities_per_y[run][30]
 
 
 # '''
-# This should print all the probes where the velocity is >= 99% free stream
-for i in range(11):
-    for j in range(len(velocities_per_y[0])):
-        if float(velocities_per_y[i][j]) >= (test_section_velocity * .99):
-            print(f"i run {i},j probe {j} @ {y_values_mm[j]} mm, vel: {velocities_per_y[i][j]} >=")
-    print("")
+for probe in range(len(y_values_mm)):
+    print(f"probe: {probe} is at height {y_values_mm[probe]} mm")
 # '''
 
 
-# '''
-for i in range(12, 21):
-    for k in range(len(velocities_per_y[0])):
-        if float(velocities_per_y[i][k]) >= (test_section_velocity * .99):
-            print(f"i run {i},k probe {k} @ {y_values_mm[k]} mm, vel: {velocities_per_y[i][k]} >=")
-    print("")
-# '''
+outof_boundary_probes = []
+outof_boundary_velocities = []
+
+# This should get all the probes where the velocity is >= 99% free stream
+for run in range(11):
+    temp_probe = []
+    temp_velocity = []
+    for probe in range(len(velocities_per_y[0])):
+        if float(velocities_per_y[run][probe]) >= (test_section_velocity * .99):
+            temp_probe.append(probe)
+            temp_velocity.append(velocities_per_y[run][probe])
+            # print(f"run {run},probe {probe} @ {y_values_mm[probe]} mm, vel: {velocities_per_y[run][probe]} >=")
+    outof_boundary_probes.append(temp_probe)
+    outof_boundary_velocities.append(temp_velocity)
+
+
+for run in range(12, 21):
+    temp_probe = []
+    temp_velocity = []
+    for probe in range(len(velocities_per_y[0])):
+        if float(velocities_per_y[run][probe]) >= (test_section_velocity * .99):
+            temp_probe.append(probe)
+            temp_velocity.append(velocities_per_y[run][probe])
+            # print(f"run {run},probe {probe} @ {y_values_mm[probe]} mm, vel: {velocities_per_y[run][probe]} >=")
+    outof_boundary_probes.append(temp_probe)
+    outof_boundary_velocities.append(temp_velocity)
+
+first_oob_probe = []
+for run in range(len(outof_boundary_probes)):
+    temp = []
+    temp.append(outof_boundary_probes[run][0])
+    first_oob_probe.append(temp)
+
+print(first_oob_probe)
 
 
 velocities_norm = []
 
-# This was ment to get the normalized velocity values for each run, somehow makes all the data identical
+# This gets the normalized velocity values for each run
 for run in range(len(velocities_per_y)):
     temp_vel = []
     for probe in range(len(velocities_per_y[run])):
@@ -250,7 +296,7 @@ def plot_momentum_thickness():
 
 if len(sys.argv) > 1:
     if sys.argv[1] == 'p':
-        plot_velocity()
+        # plot_velocity()
         plot_norm_velocity()
         plot_theoretical_boundary()
         plot_momentum_thickness()
