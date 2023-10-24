@@ -209,6 +209,27 @@ def plot_norm_velocity():
         plt.show()
 
 
+x1 = np.arange(1, 11, 1) / 39.37 # m
+x_laminar = np.concatenate((x1, [15 / 39.37, 20 / 39.37])) # m
+x_turbulent = np.arange(20, 65, 5) / 39.37 # m
+x_crit = 20 / 39.37 # m
+
+Re_laminar = DENSITY * test_section_velocity * x_laminar / VISCOSITY
+Re_turbulent = DENSITY * test_section_velocity * x_turbulent / VISCOSITY
+
+d_laminar = 5 * x_laminar / np.sqrt(Re_laminar)
+d_turbulent = ((.16 * x_turbulent) / Re_turbulent**(1/7)) - ((.16 * x_crit) / (RE_TRANSITION)**(1/7)) + ((5 * x_crit) / np.sqrt(RE_TRANSITION))
+
+def plot_theoretical_boundary():
+    plt.plot(x_laminar, d_laminar)   
+    plt.plot(x_turbulent, d_turbulent)   
+    plt.suptitle("Theoretical boundary layer thickness")
+    plt.xlabel("x distance (m)")
+    plt.ylabel("y distance (m)")
+    plt.grid()
+    plt.show()
+
+
 def plot_momentum_thickness():
     plt.plot(x_values_mm, momentum_thickness)
     plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
@@ -217,9 +238,9 @@ def plot_momentum_thickness():
     plt.grid()
     plt.show()
 
-
 if len(sys.argv) > 1:
     if sys.argv[1] == 'p':
         # plot_velocity()
-        plot_norm_velocity()
+        # plot_norm_velocity()
+        plot_theoretical_boundary()
         plot_momentum_thickness()
