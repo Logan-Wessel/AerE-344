@@ -44,13 +44,25 @@ test_section_velocity = (4.713  * MOTOR_SPEED - 1.7961) / 2.237 # m/s
 integral_terms = []
 # Stores c_d per run using summation of integral terms
 c_d = []
-
+# Stores momentum thickness per AOA
+momentum_thickness = []
 # Stores y_values where pressure probes are
 y_values = [0.006]
 y_values_mm = [4]
 for i in range(34):
     y_values.append(y_values[-1] + DELTA_Y)
     y_values_mm.append(y_values_mm[-1] + 1000 * DELTA_Y)
+
+x_values = [0]
+x_values_mm = [0]
+for i in range(10):
+    x_values.append(x_values[-1] + 0.02254)
+    x_values_mm.append(x_values_mm[-1] + 25.4)
+
+for i in range(11,21):
+    x_values.append(x_values[-1] + 5 * 0.02254)
+    x_values_mm.append(x_values_mm[-1] + 5 * 25.4)
+
 
 def getAveragePressures(run_number):
     averages = []
@@ -146,3 +158,30 @@ if True:
                     plt.grid()
                     plt.show()
             # '''
+
+
+    velocities_norm = []
+    print(velocities_per_y[run][1])
+    for run in range(len(velocities_per_y)):
+        temp_vel = []
+        for vel in velocities_per_y[run]:
+            temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
+        velocities_norm.append(temp_vel)
+
+    # Computing momentum thickness
+    for run in range(len(velocities_norm)):
+        temp_moment = []
+        for i in range(len(velocities_norm[run])):
+            temp_moment.append(velocities_norm[run][i] * (1 - velocities_norm[run][i]) * (DELTA_Y * MM_2_M))
+            integral_term = np.sum(temp_moment)
+        momentum_thickness.append(integral_term)
+
+    print(x_values_mm)
+    
+    plt.figure(run)
+    plt.plot(x_values_mm, momentum_thickness)
+    plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
+    plt.xlabel("x distance (mm)")
+    plt.ylabel("Momentum Thickness")
+    plt.grid()
+    plt.show()
