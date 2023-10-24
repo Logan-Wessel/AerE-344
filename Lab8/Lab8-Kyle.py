@@ -80,7 +80,6 @@ def getAveragePressures(run_number):
 
 # Appends average pressure data per run
 run_num = 1
-print(os.listdir(DATA_PATH))
 for filename in sorted(os.listdir(DATA_PATH)):
     file = os.path.join(DATA_PATH, filename)
     # temp = pd.read_csv(file, header=None, encoding="utf-8")
@@ -170,7 +169,6 @@ U_infinity = [test_section_velocity] * len(y_values_mm)
 
 def plot_velocity():
     for run in range(11):
-        plt.figure(run)
         plt.plot(velocities_per_y[run], y_values_mm)
         plt.plot(U_infinity, y_values_mm)
         plt.suptitle("Velocity vs y Distance from the Plate")
@@ -181,7 +179,6 @@ def plot_velocity():
         plt.show()
 
     for run in range(12, 21):
-        plt.figure(run)
         plt.plot(velocities_per_y[run], y_values_mm)
         plt.plot(U_infinity, y_values_mm)
         plt.suptitle("Velocity vs Distance from the Front of the Plate")
@@ -194,8 +191,6 @@ def plot_velocity():
 
 def plot_norm_velocity():
     for run in range(11):
-        # c_p graphs
-        plt.figure(run)
         plt.plot(velocities_norm[run], y_values_mm)
         plt.suptitle("Normalized Velocity vs y Distance from the Plate")
         plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
@@ -205,7 +200,6 @@ def plot_norm_velocity():
         plt.show()
 
     for run in range(12, 21):
-        plt.figure(run)
         plt.plot(velocities_norm[run], y_values_mm)
         plt.suptitle("Normalized Velocity vs Distance from the Front of the Plate")
         plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
@@ -216,7 +210,6 @@ def plot_norm_velocity():
 
 
 def plot_momentum_thickness():
-    # plt.figure(99)
     plt.plot(x_values_mm, momentum_thickness)
     plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
     plt.xlabel("x distance (mm)")
@@ -228,5 +221,5 @@ def plot_momentum_thickness():
 if len(sys.argv) > 1:
     if sys.argv[1] == 'p':
         # plot_velocity()
-        # plot_norm_velocity()
+        plot_norm_velocity()
         plot_momentum_thickness()
