@@ -4,6 +4,7 @@
 import os
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
 # from scipy.signal import savgol_filter
 # from scipy.signal import welch
 # from control import mag2db
@@ -42,9 +43,9 @@ integral_terms = []
 c_d = []
 
 # Stores y_values where pressure probes are
-y_values = [0.004]
+y_values = [0.006]
 y_values_mm = [4]
-for i in range(37):
+for i in range(34):
     y_values.append(y_values[-1] + DELTA_Y)
     y_values_mm.append(y_values_mm[-1] + 1000 * DELTA_Y)
 
@@ -81,9 +82,6 @@ if True:
         temp = [] # To be appended to pressure_between_probes
         # Per probe
         for i in range(35): # gets probe 1 to probe 37
-            print(i)
-            print(pressure_averages[run][i])
-            print(f"{pressure_averages[run][i+1]}\n\n")
             temp.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][i+1]))
 
         pressure_averages_between_probes.append(temp)
@@ -95,4 +93,27 @@ if True:
             temp.append(np.sqrt(pressure_averages_between_probes[run][probe] * 2 / DENSITY))
 
         velocities_per_y.append(temp)
+    print(velocities_per_y[1])
+    
+    
+    for run in range(11):
+            # c_p graphs
+            plt.figure(run)
+            plt.plot(velocities_per_y[run], y_values_mm)
+            plt.suptitle("Velocity vs y Distance from the Plate")
+            plt.title(f"Distance from Front of Plate: {run*25.4} mm")
+            plt.ylabel("y distance (mm)")
+            plt.xlabel("Velocity (m/s)")
+            plt.grid()
+            plt.show()
 
+    for run in range(12,22):
+            # c_p graphs
+            plt.figure(run)
+            plt.plot(velocities_per_y[run], y_values_mm)
+            plt.suptitle("Velocity vs Distance from the Front of the Plate")
+            plt.title(f"Distance from Front of Plate: {279.4 + (run - 11) * 5 * 25.4} mm")
+            plt.ylabel("y distance (mm)")
+            plt.xlabel("Velocity (m/s)")
+            plt.grid()
+            plt.show()
