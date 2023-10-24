@@ -159,7 +159,7 @@ if True:
                     plt.show()
             # '''
 
-
+    '''
     velocities_norm = []
     print(velocities_per_y[run][1])
     for run in range(len(velocities_per_y)):
@@ -185,3 +185,4 @@ if True:
     plt.ylabel("Momentum Thickness")
     plt.grid()
     plt.show()
+    # '''
