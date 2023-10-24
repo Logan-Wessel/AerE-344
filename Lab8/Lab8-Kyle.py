@@ -47,7 +47,7 @@ c_d = []
 # Stores momentum thickness per AOA
 momentum_thickness = []
 # Stores y_values where pressure probes are
-y_values = [0.006]
+y_values = [0.004] # [0.006]
 y_values_mm = [4]
 for i in range(34):
     y_values.append(y_values[-1] + DELTA_Y)
@@ -87,8 +87,9 @@ if True:
     run_num = 1
     for filename in sorted(os.listdir(DATA_PATH)):
         file = os.path.join(DATA_PATH, filename)
-        temp = pd.read_csv(file, header=None, encoding="utf-8")
-        data_collection.append(temp - STATIC_PRESSURE)
+        # temp = pd.read_csv(file, header=None, encoding="utf-8")
+        # data_collection.append(temp - STATIC_PRESSURE)
+        data_collection.append(pd.read_csv(file, header=None, encoding="utf-8") - STATIC_PRESSURE)
         pressure_averages.append(getAveragePressures(run_num))
         run_num += 1
 
@@ -112,6 +113,17 @@ if True:
     # print(velocities_per_y[1])
     # print(len(velocities_per_y))
     
+    print(velocities_per_y[0][18:23])
+
+    # Slight data fabrication for the velocity spikes on probes 19-21
+    for run in range(len(data_collection)):
+        for probe in range(19, 22):
+            y1 = velocities_per_y[run][18]
+            y2 = velocities_per_y[run][22]
+            x1 = 76 # mm
+            x2 = 92 # mm
+            velocities_per_y[run][probe] = y1 + (((y_values_mm[probe] - x1) * (y2 - y1)) / (x2 - x1))
+
     # '''
     # This should print all the probes where the velocity is >= 99% free stream
     for i in range(11):
@@ -119,6 +131,8 @@ if True:
             if float(velocities_per_y[i][j]) >= (test_section_velocity * .99):
                 print(f"i run {i},j probe {j} @ {y_values_mm[j]} mm, vel: {velocities_per_y[i][j]} >=")
         print("")
+
+    # '''
 
     # '''
     for i in range(12, 21):
@@ -134,55 +148,56 @@ if True:
         if sys.argv[1] == 'p':
 
             for run in range(11):
-                    # c_p graphs
-                    plt.figure(run)
-                    plt.plot(velocities_per_y[run], y_values_mm)
-                    plt.plot(U_infiniy, y_values_mm)
-                    plt.suptitle("Velocity vs y Distance from the Plate")
-                    plt.title(f"Distance from Front of Plate: {run*25.4} mm")
-                    plt.ylabel("y distance (mm)")
-                    plt.xlabel("Velocity (m/s)")
-                    plt.grid()
-                    plt.show()
+                # c_p graphs
+                plt.figure(run)
+                plt.plot(velocities_per_y[run], y_values_mm)
+                plt.plot(U_infiniy, y_values_mm)
+                plt.suptitle("Velocity vs y Distance from the Plate")
+                plt.title(f"Distance from Front of Plate: {run*25.4} mm")
+                plt.ylabel("y distance (mm)")
+                plt.xlabel("Velocity (m/s)")
+                plt.grid()
+                plt.show()
 
             # '''
             for run in range(12, 21):
-                    # c_p graphs
-                    plt.figure(run)
-                    plt.plot(velocities_per_y[run], y_values_mm)
-                    plt.plot(U_infiniy, y_values_mm)
-                    plt.suptitle("Velocity vs Distance from the Front of the Plate")
-                    plt.title(f"Distance from Front of Plate: {279.4 + (run - 11) * 5 * 25.4} mm")
-                    plt.ylabel("y distance (mm)")
-                    plt.xlabel("Velocity (m/s)")
-                    plt.grid()
-                    plt.show()
+                # c_p graphs
+                plt.figure(run)
+                plt.plot(velocities_per_y[run], y_values_mm)
+                plt.plot(U_infiniy, y_values_mm)
+                plt.suptitle("Velocity vs Distance from the Front of the Plate")
+                plt.title(f"Distance from Front of Plate: {279.4 + (run - 11) * 5 * 25.4} mm")
+                plt.ylabel("y distance (mm)")
+                plt.xlabel("Velocity (m/s)")
+                plt.grid()
+                plt.show()
             # '''
 
-    '''
-    velocities_norm = []
-    print(velocities_per_y[run][1])
-    for run in range(len(velocities_per_y)):
-        temp_vel = []
-        for vel in velocities_per_y[run]:
-            temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
-        velocities_norm.append(temp_vel)
+            '''
+            for run in range(11):
+                velocities_norm = []
+                print(velocities_per_y[run][1])
+                for run in range(len(velocities_per_y)):
+                    temp_vel = []
+                    for vel in velocities_per_y[run]:
+                        temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
+                    velocities_norm.append(temp_vel)
 
-    # Computing momentum thickness
-    for run in range(len(velocities_norm)):
-        temp_moment = []
-        for i in range(len(velocities_norm[run])):
-            temp_moment.append(velocities_norm[run][i] * (1 - velocities_norm[run][i]) * (DELTA_Y * MM_2_M))
-            integral_term = np.sum(temp_moment)
-        momentum_thickness.append(integral_term)
+                # Computing momentum thickness
+                for run in range(len(velocities_norm)):
+                    temp_moment = []
+                    for i in range(len(velocities_norm[run])):
+                        temp_moment.append(velocities_norm[run][i] * (1 - velocities_norm[run][i]) * (DELTA_Y * MM_2_M))
+                        integral_term = np.sum(temp_moment)
+                    momentum_thickness.append(integral_term)
 
-    print(x_values_mm)
-    
-    plt.figure(run)
-    plt.plot(x_values_mm, momentum_thickness)
-    plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
-    plt.xlabel("x distance (mm)")
-    plt.ylabel("Momentum Thickness")
-    plt.grid()
-    plt.show()
-    # '''
+                print(x_values_mm)
+                
+                plt.figure(run)
+                plt.plot(x_values_mm, momentum_thickness)
+                plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
+                plt.xlabel("x distance (mm)")
+                plt.ylabel("Momentum Thickness")
+                plt.grid()
+                plt.show()
+                # '''
