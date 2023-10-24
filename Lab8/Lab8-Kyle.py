@@ -124,6 +124,10 @@ if True:
             x2 = 92 # mm
             velocities_per_y[run][probe] = y1 + (((y_values_mm[probe] - x1) * (y2 - y1)) / (x2 - x1))
 
+    print(velocities_per_y[0][1])
+    print(velocities_per_y[10][1])
+    print(velocities_per_y[15][1])
+    print(velocities_per_y[20][1])
     # '''
     # This should print all the probes where the velocity is >= 99% free stream
     for i in range(11):
@@ -144,14 +148,32 @@ if True:
 
     U_infiniy = [test_section_velocity] * 35
 
+    velocities_norm = []
+
+    # This was ment to get the normalized velocity values for each run, somehow makes all the data identical
+    for run in range(21):
+        # print(velocities_per_y[run][1])
+
+        for probe in range(len(velocities_per_y[run])):
+            temp_vel = []
+            for vel in range(len(velocities_per_y[run])):
+                temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
+            velocities_norm.append(temp_vel)
+
+    print(velocities_norm[0][10])
+    print(velocities_norm[10][10])
+    print(velocities_norm[20][10])
+    print(velocities_norm[21][10])
+
     if len(sys.argv) > 1:
         if sys.argv[1] == 'p':
 
             for run in range(11):
                 # c_p graphs
                 plt.figure(run)
-                plt.plot(velocities_per_y[run], y_values_mm)
-                plt.plot(U_infiniy, y_values_mm)
+                # plt.plot(velocities_per_y[run], y_values_mm)
+                plt.plot(velocities_norm[run], y_values_mm)
+                # plt.plot(U_infiniy, y_values_mm)
                 plt.suptitle("Velocity vs y Distance from the Plate")
                 plt.title(f"Distance from Front of Plate: {run*25.4} mm")
                 plt.ylabel("y distance (mm)")
@@ -163,8 +185,9 @@ if True:
             for run in range(12, 21):
                 # c_p graphs
                 plt.figure(run)
-                plt.plot(velocities_per_y[run], y_values_mm)
-                plt.plot(U_infiniy, y_values_mm)
+                # plt.plot(velocities_per_y[run], y_values_mm)
+                plt.plot(velocities_norm[run], y_values_mm)
+                # plt.plot(U_infiniy, y_values_mm)
                 plt.suptitle("Velocity vs Distance from the Front of the Plate")
                 plt.title(f"Distance from Front of Plate: {279.4 + (run - 11) * 5 * 25.4} mm")
                 plt.ylabel("y distance (mm)")
