@@ -82,92 +82,104 @@ def getAveragePressures(run_number):
     # Return array of averages
     return averages
 
-if True:
-    # Appends average pressure data per run
-    run_num = 1
-    for filename in sorted(os.listdir(DATA_PATH)):
-        file = os.path.join(DATA_PATH, filename)
-        # temp = pd.read_csv(file, header=None, encoding="utf-8")
-        # data_collection.append(temp - STATIC_PRESSURE)
-        data_collection.append(pd.read_csv(file, header=None, encoding="utf-8") - STATIC_PRESSURE)
-        pressure_averages.append(getAveragePressures(run_num))
-        run_num += 1
+# Appends average pressure data per run
+run_num = 1
+for filename in sorted(os.listdir(DATA_PATH)):
+    file = os.path.join(DATA_PATH, filename)
+    # temp = pd.read_csv(file, header=None, encoding="utf-8")
+    # data_collection.append(temp - STATIC_PRESSURE)
+    data_collection.append(pd.read_csv(file, header=None, encoding="utf-8") - STATIC_PRESSURE)
+    pressure_averages.append(getAveragePressures(run_num))
+    run_num += 1
 
-    # Computes average pressure between probes, per run
-    for run in range(len(data_collection)):
-        temp = [] # To be appended to pressure_between_probes
-        # Per probe
-        for i in range(35): # gets probe 1 to probe 37
-            temp.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][i+1]))
+# Computes average pressure between probes, per run
+for run in range(len(data_collection)):
+    temp = [] # To be appended to pressure_between_probes
+    # Per probe
+    for i in range(35): # gets probe 1 to probe 37
+        temp.append(0.5 * (pressure_averages[run][i] + pressure_averages[run][i+1]))
 
-        pressure_averages_between_probes.append(temp)
+    pressure_averages_between_probes.append(temp)
 
-    # Computes velocity at y_distances per run
-    for run in range(len(data_collection)):
-        temp = []
-        for probe in range(len(pressure_averages_between_probes[run])):
-            temp.append(np.sqrt(pressure_averages_between_probes[run][probe] * 2 / DENSITY))
+# Computes velocity at y_distances per run
+for run in range(len(data_collection)):
+    temp = []
+    for probe in range(len(pressure_averages_between_probes[run])):
+        temp.append(np.sqrt(pressure_averages_between_probes[run][probe] * 2 / DENSITY))
 
-        velocities_per_y.append(temp)
+    velocities_per_y.append(temp)
 
-    # print(velocities_per_y[1])
-    # print(len(velocities_per_y))
-    
-    # Slight data fabrication for the velocity spikes on probes 19-21
-    for run in range(len(data_collection)):
-        for probe in range(19, 22):
-            y1 = velocities_per_y[run][18]
-            y2 = velocities_per_y[run][22]
-            x1 = 76 # mm
-            x2 = 92 # mm
-            velocities_per_y[run][probe] = y1 + (((y_values_mm[probe] - x1) * (y2 - y1)) / (x2 - x1))
+# print(velocities_per_y[1])
+# print(len(velocities_per_y))
 
-    # '''
-    # This should print all the probes where the velocity is >= 99% free stream
-    for i in range(11):
-        for j in range(len(velocities_per_y[0])):
-            if float(velocities_per_y[i][j]) >= (test_section_velocity * .99):
-                print(f"i run {i},j probe {j} @ {y_values_mm[j]} mm, vel: {velocities_per_y[i][j]} >=")
-        print("")
+# Slight data fabrication for the velocity spikes on probes 19-21
+for run in range(len(data_collection)):
+    for probe in range(19, 22):
+        y1 = velocities_per_y[run][18]
+        y2 = velocities_per_y[run][22]
+        x1 = 76 # mm
+        x2 = 92 # mm
+        velocities_per_y[run][probe] = y1 + (((y_values_mm[probe] - x1) * (y2 - y1)) / (x2 - x1))
 
-    # '''
+# '''
+# This should print all the probes where the velocity is >= 99% free stream
+for i in range(11):
+    for j in range(len(velocities_per_y[0])):
+        if float(velocities_per_y[i][j]) >= (test_section_velocity * .99):
+            print(f"i run {i},j probe {j} @ {y_values_mm[j]} mm, vel: {velocities_per_y[i][j]} >=")
 
-    # '''
-    for i in range(12, 21):
-        for k in range(len(velocities_per_y[0])):
-            if float(velocities_per_y[i][k]) >= (test_section_velocity * .99):
-                print(f"i run {i},k probe {k} @ {y_values_mm[k]} mm, vel: {velocities_per_y[i][k]} >=")
-        print("")
-    # '''
+# '''
 
-    U_infiniy = [test_section_velocity] * 35
+# '''
+for i in range(12, 21):
+    for k in range(len(velocities_per_y[0])):
+        if float(velocities_per_y[i][k]) >= (test_section_velocity * .99):
+            print(f"i run {i},k probe {k} @ {y_values_mm[k]} mm, vel: {velocities_per_y[i][k]} >=")
+    print("")
+# '''
 
+velocities_norm = []
+
+# This was ment to get the normalized velocity values for each run, somehow makes all the data identical
+for run in range(len(velocities_per_y)):
+    temp_vel = []
+    for probe in range(len(velocities_per_y[run])):
+        temp_vel.append(velocities_per_y[run][probe] / test_section_velocity)
+    velocities_norm.append(temp_vel)
+
+for run in range(21):
     velocities_norm = []
-
-    # This was ment to get the normalized velocity values for each run, somehow makes all the data identical
     for run in range(len(velocities_per_y)):
         temp_vel = []
-        for probe in range(len(velocities_per_y[run])):
-            temp_vel.append(velocities_per_y[run][probe] / test_section_velocity)
+        for vel in range(len(velocities_per_y[run])):
+            temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
         velocities_norm.append(temp_vel)
 
-    if len(sys.argv) > 1:
-        if sys.argv[1] == 'p':
+    # Computing momentum thickness
+    for run in range(21):
+        temp_moment = []
+        for i in range(len(velocities_norm[run])):
+            temp_moment.append(velocities_norm[run][i] * (1 - velocities_norm[run][i]) * (DELTA_Y * MM_2_M))
+            integral_term = np.sum(temp_moment)
+        momentum_thickness.append(integral_term)
 
+if len(sys.argv) > 1:
+        if sys.argv[1] == 'p':
+    
             for run in range(11):
                 # c_p graphs
                 plt.figure(run)
-                # plt.plot(velocities_per_y[run], y_values_mm)
+                #plt.plot(velocities_per_y[run], y_values_mm)
                 plt.plot(velocities_norm[run], y_values_mm)
-                # plt.plot(U_infiniy, y_values_mm)
-                plt.suptitle("Velocity vs y Distance from the Plate")
-                plt.title(f"Distance from Front of Plate: {run*25.4} mm")
+                #plt.plot(U_infiniy, y_values_mm)
+                plt.suptitle("Normalized Velocity vs y Distance from the Plate")
+                plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
                 plt.ylabel("y distance (mm)")
                 plt.xlabel("Velocity (m/s)")
                 plt.grid()
                 plt.show()
 
-            # '''
+
             for run in range(12, 21):
                 # c_p graphs
                 plt.figure(run)
@@ -175,32 +187,11 @@ if True:
                 plt.plot(velocities_norm[run], y_values_mm)
                 # plt.plot(U_infiniy, y_values_mm)
                 plt.suptitle("Velocity vs Distance from the Front of the Plate")
-                plt.title(f"Distance from Front of Plate: {279.4 + (run - 11) * 5 * 25.4} mm")
+                plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
                 plt.ylabel("y distance (mm)")
                 plt.xlabel("Velocity (m/s)")
                 plt.grid()
                 plt.show()
-            # '''
-
-            '''
-            for run in range(11):
-                velocities_norm = []
-                print(velocities_per_y[run][1])
-                for run in range(len(velocities_per_y)):
-                    temp_vel = []
-                    for vel in velocities_per_y[run]:
-                        temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
-                    velocities_norm.append(temp_vel)
-
-                # Computing momentum thickness
-                for run in range(len(velocities_norm)):
-                    temp_moment = []
-                    for i in range(len(velocities_norm[run])):
-                        temp_moment.append(velocities_norm[run][i] * (1 - velocities_norm[run][i]) * (DELTA_Y * MM_2_M))
-                        integral_term = np.sum(temp_moment)
-                    momentum_thickness.append(integral_term)
-
-                print(x_values_mm)
                 
                 plt.figure(run)
                 plt.plot(x_values_mm, momentum_thickness)
@@ -209,4 +200,4 @@ if True:
                 plt.ylabel("Momentum Thickness")
                 plt.grid()
                 plt.show()
-                # '''
+            
