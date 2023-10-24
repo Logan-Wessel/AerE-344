@@ -113,8 +113,6 @@ if True:
     # print(velocities_per_y[1])
     # print(len(velocities_per_y))
     
-    print(velocities_per_y[0][18:23])
-
     # Slight data fabrication for the velocity spikes on probes 19-21
     for run in range(len(data_collection)):
         for probe in range(19, 22):
@@ -124,10 +122,6 @@ if True:
             x2 = 92 # mm
             velocities_per_y[run][probe] = y1 + (((y_values_mm[probe] - x1) * (y2 - y1)) / (x2 - x1))
 
-    print(velocities_per_y[0][1])
-    print(velocities_per_y[10][1])
-    print(velocities_per_y[15][1])
-    print(velocities_per_y[20][1])
     # '''
     # This should print all the probes where the velocity is >= 99% free stream
     for i in range(11):
@@ -151,19 +145,11 @@ if True:
     velocities_norm = []
 
     # This was ment to get the normalized velocity values for each run, somehow makes all the data identical
-    for run in range(21):
-        # print(velocities_per_y[run][1])
-
+    for run in range(len(velocities_per_y)):
+        temp_vel = []
         for probe in range(len(velocities_per_y[run])):
-            temp_vel = []
-            for vel in range(len(velocities_per_y[run])):
-                temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
-            velocities_norm.append(temp_vel)
-
-    print(velocities_norm[0][10])
-    print(velocities_norm[10][10])
-    print(velocities_norm[20][10])
-    print(velocities_norm[21][10])
+            temp_vel.append(velocities_per_y[run][probe] / test_section_velocity)
+        velocities_norm.append(temp_vel)
 
     if len(sys.argv) > 1:
         if sys.argv[1] == 'p':
