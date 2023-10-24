@@ -40,12 +40,8 @@ velocities_per_y = [] # m/s
 test_section_velocity = (4.713  * MOTOR_SPEED - 1.7961) / 2.237 # m/s
 # print(test_section_velocity)
 
-# Stores integral terms for computing c_d
-integral_terms = []
 # Stores c_d per run using summation of integral terms
 c_d = []
-# Stores momentum thickness per AOA
-momentum_thickness = []
 # Stores y_values where pressure probes are
 y_values = [0.004] # [0.006]
 y_values_mm = [4]
@@ -84,6 +80,7 @@ def getAveragePressures(run_number):
 
 # Appends average pressure data per run
 run_num = 1
+print(os.listdir(DATA_PATH))
 for filename in sorted(os.listdir(DATA_PATH)):
     file = os.path.join(DATA_PATH, filename)
     # temp = pd.read_csv(file, header=None, encoding="utf-8")
@@ -147,7 +144,7 @@ for run in range(len(velocities_per_y)):
         temp_vel.append(velocities_per_y[run][probe] / test_section_velocity)
     velocities_norm.append(temp_vel)
 
-for run in range(21):
+for run in range(len(velocities_per_y)):
     velocities_norm = []
     for run in range(len(velocities_per_y)):
         temp_vel = []
@@ -155,49 +152,81 @@ for run in range(21):
             temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
         velocities_norm.append(temp_vel)
 
-    # Computing momentum thickness
-    for run in range(21):
-        temp_moment = []
-        for i in range(len(velocities_norm[run])):
-            temp_moment.append(velocities_norm[run][i] * (1 - velocities_norm[run][i]) * (DELTA_Y * MM_2_M))
-            integral_term = np.sum(temp_moment)
-        momentum_thickness.append(integral_term)
+
+# Stores momentum thickness per AOA
+momentum_thickness = []
+# Stores integral terms for computing c_d
+integral_terms = []
+
+for run in range(len(velocities_norm)):
+    temp_moment = []
+    for port in range(len(velocities_norm[0])):
+        temp_moment.append(velocities_norm[run][port] * (1 - velocities_norm[run][port]) * (DELTA_Y * MM_2_M))
+        integral_terms = np.sum(temp_moment)
+    momentum_thickness.append(integral_terms)
+
+
+U_infinity = [test_section_velocity] * len(y_values_mm)
+
+def plot_velocity():
+    for run in range(11):
+        plt.figure(run)
+        plt.plot(velocities_per_y[run], y_values_mm)
+        plt.plot(U_infinity, y_values_mm)
+        plt.suptitle("Velocity vs y Distance from the Plate")
+        plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
+        plt.ylabel("y distance (mm)")
+        plt.xlabel("Velocity (m/s)")
+        plt.grid()
+        plt.show()
+
+    for run in range(12, 21):
+        plt.figure(run)
+        plt.plot(velocities_per_y[run], y_values_mm)
+        plt.plot(U_infinity, y_values_mm)
+        plt.suptitle("Velocity vs Distance from the Front of the Plate")
+        plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
+        plt.ylabel("y distance (mm)")
+        plt.xlabel("Velocity (m/s)")
+        plt.grid()
+        plt.show()
+
+
+def plot_norm_velocity():
+    for run in range(11):
+        # c_p graphs
+        plt.figure(run)
+        plt.plot(velocities_norm[run], y_values_mm)
+        plt.suptitle("Normalized Velocity vs y Distance from the Plate")
+        plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
+        plt.ylabel("y distance (mm)")
+        plt.xlabel("Normalized Velocity (dimensionless)")
+        plt.grid()
+        plt.show()
+
+    for run in range(12, 21):
+        plt.figure(run)
+        plt.plot(velocities_norm[run], y_values_mm)
+        plt.suptitle("Normalized Velocity vs Distance from the Front of the Plate")
+        plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
+        plt.ylabel("y distance (mm)")
+        plt.xlabel("Normalized Velocity (dimensionless)")
+        plt.grid()
+        plt.show()
+
+
+def plot_momentum_thickness():
+    # plt.figure(99)
+    plt.plot(x_values_mm, momentum_thickness)
+    plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
+    plt.xlabel("x distance (mm)")
+    plt.ylabel("Momentum Thickness")
+    plt.grid()
+    plt.show()
+
 
 if len(sys.argv) > 1:
-        if sys.argv[1] == 'p':
-    
-            for run in range(11):
-                # c_p graphs
-                plt.figure(run)
-                #plt.plot(velocities_per_y[run], y_values_mm)
-                plt.plot(velocities_norm[run], y_values_mm)
-                #plt.plot(U_infiniy, y_values_mm)
-                plt.suptitle("Normalized Velocity vs y Distance from the Plate")
-                plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
-                plt.ylabel("y distance (mm)")
-                plt.xlabel("Velocity (m/s)")
-                plt.grid()
-                plt.show()
-
-
-            for run in range(12, 21):
-                # c_p graphs
-                plt.figure(run)
-                # plt.plot(velocities_per_y[run], y_values_mm)
-                plt.plot(velocities_norm[run], y_values_mm)
-                # plt.plot(U_infiniy, y_values_mm)
-                plt.suptitle("Velocity vs Distance from the Front of the Plate")
-                plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
-                plt.ylabel("y distance (mm)")
-                plt.xlabel("Velocity (m/s)")
-                plt.grid()
-                plt.show()
-                
-                plt.figure(run)
-                plt.plot(x_values_mm, momentum_thickness)
-                plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
-                plt.xlabel("x distance (mm)")
-                plt.ylabel("Momentum Thickness")
-                plt.grid()
-                plt.show()
-            
+    if sys.argv[1] == 'p':
+        # plot_velocity()
+        # plot_norm_velocity()
+        plot_momentum_thickness()
