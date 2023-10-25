@@ -308,7 +308,7 @@ def plot_norm_velocity():
         plt.show()
 
 def plot_y_over_del():
-    for run in range(11):
+    for run in range(12):
         plt.figure(run)
         plt.plot(velocities_norm[run], y_over_del[run])
         plt.suptitle("Y/Del vs Normalized Velocity")
@@ -375,7 +375,7 @@ def plot_cd():
     plt.plot(x_values[0:-1], coefficient_drag)
     plt.suptitle("Coefficient of Drag vs Distance from the Front of the Plate")
     plt.xlabel("x distance (m)")
-    plt.ylabel("Shear Stress Coefficient (dimensionless)")
+    plt.ylabel("Drag Coefficient (dimensionless)")
     plt.grid()
     plt.show()
 
@@ -384,10 +384,10 @@ if len(sys.argv) > 1:
     if sys.argv[1] == 'p':
         # plot_velocity()
         # plot_norm_velocity()
-        #plot_y_over_del()
-        #plot_theoretical_boundary()
-        plot_momentum_thickness()
-        #plot_shear_stress()
-        plot_cd()
+        plot_y_over_del()
+        # plot_theoretical_boundary()
+        # plot_momentum_thickness()
+        # plot_shear_stress()
+        # plot_cd()
 
 
