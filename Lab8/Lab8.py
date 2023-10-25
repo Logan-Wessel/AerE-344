@@ -223,15 +223,6 @@ for run in range(len(velocities_per_y)):
         temp_vel.append(velocities_per_y[run][probe] / test_section_velocity)
     velocities_norm.append(temp_vel)
 
-for run in range(len(velocities_per_y)):
-    velocities_norm = []
-    for run in range(len(velocities_per_y)):
-        temp_vel = []
-        for vel in range(len(velocities_per_y[run])):
-            temp_vel.append((1 / test_section_velocity) * velocities_per_y[run][vel])
-        velocities_norm.append(temp_vel)
-
-
 # Stores momentum thickness per run
 momentum_thickness = []
 # Stores integral terms for computing c_d
@@ -239,15 +230,25 @@ integral_terms = []
 
 for run in range(len(velocities_norm)):
     temp_moment = []
-    for port in range(len(velocities_norm[0])):
+    for port in range(len(velocities_norm[run])):
         temp_moment.append(velocities_norm[run][port] * (1 - velocities_norm[run][port]) * (DELTA_Y))
     integral_terms = np.sum(temp_moment)
     momentum_thickness.append(integral_terms)
+
 
 # Calculations for the theoretical shear stress values
 Re_x = []
 for i in range(1, len(x_values)):
     Re_x.append((DENSITY * test_section_velocity * x_values[i]) / VISCOSITY)
+print(Re_x[-1])
+skin_friction = []
+shear = []
+for i in range(len(momentum_thickness) - 1):
+    shear.append((momentum_thickness[i+1] - momentum_thickness[i]) / (x_values[i+1] - x_values[i]) * DENSITY * test_section_velocity **2)
+
+for i in range(len(shear)):
+    temp = shear[i] / ( 0.5 * DENSITY * test_section_velocity**2)
+    skin_friction.append(temp)
 
 C_f = []
 for i in range(len(Re_x)):
@@ -256,8 +257,7 @@ for i in range(len(Re_x)):
 coefficient_drag = []
 
 # Computing coefficient of drag
-for run in range(1,21):
-    coefficient_drag.append(2 * momentum_thickness[run] / (x_values[run]))
+coefficient_drag = (2 * momentum_thickness[-1] / (x_values[-1]))
 
 U_infinity = [test_section_velocity] * len(y_values_mm)
 
@@ -344,6 +344,23 @@ Re_turbulent = DENSITY * test_section_velocity * x_turbulent / VISCOSITY
 d_laminar = 5 * x_laminar / np.sqrt(Re_laminar)
 d_turbulent = ((.16 * x_turbulent) / Re_turbulent**(1/7)) - ((.16 * x_crit) / (RE_TRANSITION)**(1/7)) + ((5 * x_crit) / np.sqrt(RE_TRANSITION))
 
+d_turbulent_mm = []
+d_laminar_mm = []
+boundary_thickness_mm = []
+momentum_thickness_mm = []
+
+for i in range(len(d_turbulent)):
+    d_turbulent_mm.append(d_turbulent[i] * 1000) 
+
+for i in range(len(d_laminar)):
+    d_laminar_mm.append(d_laminar[i] * 1000) 
+
+for i in range(len(boundary_thickness)):
+    boundary_thickness_mm.append(boundary_thickness[i] * 1000) 
+
+for i in range(len(momentum_thickness)):
+    momentum_thickness_mm.append(momentum_thickness[i] * 1000) 
+
 def plot_theoretical_boundary():
     plt.plot(x_laminar, d_laminar)   
     plt.plot(x_turbulent, d_turbulent)   
@@ -354,7 +371,6 @@ def plot_theoretical_boundary():
     plt.grid()
     plt.show()
 
-
 def plot_momentum_thickness():
     plt.plot(x_values, momentum_thickness)
     plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
@@ -364,7 +380,7 @@ def plot_momentum_thickness():
     plt.show()
 
 def plot_shear_stress():
-    plt.plot(x_values[0:-1], C_f)
+    plt.plot(x_values[0:-1], skin_friction)
     plt.suptitle("Shear Stress Coefficient vs Distance from the Front of the Plate")
     plt.xlabel("x distance (m)")
     plt.ylabel("Shear Stress Coefficient (dimensionless)")
@@ -375,11 +391,11 @@ def plot_cd():
     plt.plot(x_values[0:-1], coefficient_drag)
     plt.suptitle("Coefficient of Drag vs Distance from the Front of the Plate")
     plt.xlabel("x distance (m)")
-    plt.ylabel("Shear Stress Coefficient (dimensionless)")
+    plt.ylabel("Coefficient of Drag (dimensionless)")
     plt.grid()
     plt.show()
 
-
+'''
 if len(sys.argv) > 1:
     if sys.argv[1] == 'p':
         # plot_velocity()
@@ -387,7 +403,54 @@ if len(sys.argv) > 1:
         #plot_y_over_del()
         #plot_theoretical_boundary()
         plot_momentum_thickness()
-        #plot_shear_stress()
+        plot_shear_stress()
         plot_cd()
+'''
 
+plt.plot(x_values, momentum_thickness_mm)
+plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
+plt.xlabel("x distance (m)")
+plt.ylabel("Momentum Thickness (mm)")
+plt.grid()
+plt.show()
 
+plt.plot(x_values[0:-1], skin_friction, label = ('Experimental Friction Coefficient'))
+plt.plot(x_values[0:-1], C_f, label = ('Theoretical Skin Friction Coefficient'))
+plt.suptitle("Shear Stress Coefficient vs Distance from the Front of the Plate")
+plt.xlabel("x distance (m)")
+plt.ylabel("Shear Stress Coefficient (dimensionless)")
+plt.grid()
+plt.legend()
+plt.show()
+
+plt.plot(x_laminar, d_laminar_mm, label = ('Theoretical Laminar Boundary Layer'))   
+plt.plot(x_turbulent, d_turbulent_mm, label = 'Theoretical Turbulent Boundary Layer')   
+plt.plot(x_total, boundary_thickness_mm, label = ('Experimental Boundary Layer'))
+plt.suptitle("Theoretical boundary layer thickness")
+plt.xlabel("x distance (mm)")
+plt.ylabel("y distance (mm)")
+plt.grid()
+plt.legend()
+plt.show()
+
+for run in range(11):
+    plt.figure(run)
+    plt.plot(velocities_norm[run], y_values_mm)
+    plt.suptitle("Normalized Velocity vs y Distance from the Plate")
+    plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
+    plt.ylabel("y distance (mm)")
+    plt.xlabel("Normalized Velocity (dimensionless)")
+    plt.grid()
+    plt.show()
+
+for run in range(12, 21):
+    plt.figure(run)
+    plt.plot(velocities_norm[run], y_values_mm)
+    plt.suptitle("Normalized Velocity vs Distance from the Front of the Plate")
+    plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
+    plt.ylabel("y distance (mm)")
+    plt.xlabel("Normalized Velocity (dimensionless)")
+    plt.grid()
+    plt.show()
+print('Reynolds Number for the last streamwise position: ', Re_x[-1])
+print('Computed CD for last streamwise position: ', coefficient_drag)
