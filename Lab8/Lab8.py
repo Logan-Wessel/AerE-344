@@ -24,6 +24,7 @@ DATA_PATH = os.path.join(os.getcwd(), 'Data')
 
 TOTAL_PRESSURE = -2.60641           # Pa
 STATIC_PRESSURE = -81.6712          # Pa
+DYNAMIC_PRESSURE = TOTAL_PRESSURE - STATIC_PRESSURE
 RE_TRANSITION = 5 * 10**5
 
 
@@ -38,7 +39,7 @@ pressure_averages_between_probes = []
 velocities_per_y = [] # m/s
 # Store velocity in the test section
 test_section_velocity = (4.713  * MOTOR_SPEED - 1.7961) / 2.237 # m/s
-test_section_velocity_pitot = np.sqrt(((TOTAL_PRESSURE - STATIC_PRESSURE) * 2) / DENSITY) # m/s
+test_section_velocity_pitot = np.sqrt((DYNAMIC_PRESSURE * 2) / DENSITY) # m/s
 # print(f"motor speed calibration: {test_section_velocity} m/s")
 # print(f"pitot tube: {test_section_velocity_pitot} m/s")
 test_section_velocity = test_section_velocity_pitot
@@ -55,11 +56,11 @@ for i in range(34):
 x_values = [0]
 x_values_mm = [0]
 for i in range(10):
-    x_values.append(x_values[-1] + 0.02254)
+    x_values.append(x_values[-1] + (1 / 39.3701))
     x_values_mm.append(x_values_mm[-1] + 25.4)
 
 for i in range(11,21):
-    x_values.append(x_values[-1] + 5 * 0.02254)
+    x_values.append(x_values[-1] + 5 * (1 / 39.3701))
     x_values_mm.append(x_values_mm[-1] + 5 * 25.4)
 
 
@@ -234,6 +235,15 @@ for run in range(len(velocities_norm)):
         integral_terms = np.sum(temp_moment)
     momentum_thickness.append(integral_terms)
 
+# Calculations for the theoretical shear stress values
+Re_x = []
+for i in range(1, len(x_values)):
+    Re_x.append((DENSITY * test_section_velocity * x_values[i]) / VISCOSITY)
+
+C_f = []
+for i in range(len(Re_x)):
+    C_f.append(.0583 / (Re_x[i]**.2))
+
 
 U_infinity = [test_section_velocity] * len(y_values_mm)
 
@@ -283,14 +293,14 @@ def plot_norm_velocity():
         plt.show()
 
 
-x1 = np.arange(1, 11, 1) / 39.37
-x2 = np.arange(10, 65, 5) / 39.37
+x1 = np.arange(1, 11, 1) * 0.02254
+x2 = np.arange(10, 65, 5) * .02254
 x_total = np.concatenate((x1, x2))
 
-x1 = np.arange(1, 11, 1) / 39.37 # m
-x_laminar = np.concatenate((x1, [15 / 39.37, 20 / 39.37])) # m
-x_turbulent = np.arange(20, 65, 5) / 39.37 # m
-x_crit = 20 / 39.37 # m
+x1 = np.arange(1, 11, 1) * .02254 # m
+x_laminar = np.concatenate((x1, [15 * .02254, 20 * .02254])) # m
+x_turbulent = np.arange(20, 65, 5) * .02254 # m
+x_crit = 20 * .02254 # m
 
 Re_laminar = DENSITY * test_section_velocity * x_laminar / VISCOSITY
 Re_turbulent = DENSITY * test_section_velocity * x_turbulent / VISCOSITY
@@ -313,13 +323,23 @@ def plot_momentum_thickness():
     plt.plot(x_values, momentum_thickness)
     plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
     plt.xlabel("x distance (m)")
-    plt.ylabel("Momentum Thickness(m)")
+    plt.ylabel("Momentum Thickness (m)")
     plt.grid()
     plt.show()
+
+def plot_shear_stress():
+    plt.plot(x_values[0:-1], C_f)
+    plt.suptitle("Shear Stress Coefficient vs Distance from the Front of the Plate")
+    plt.xlabel("x distance (m)")
+    plt.ylabel("Shear Stress Coefficient (dimensionless)")
+    plt.grid()
+    plt.show()
+
 
 if len(sys.argv) > 1:
     if sys.argv[1] == 'p':
         # plot_velocity()
-        plot_norm_velocity()
+        # plot_norm_velocity()
         plot_theoretical_boundary()
         plot_momentum_thickness()
+        plot_shear_stress()
