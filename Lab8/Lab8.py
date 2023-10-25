@@ -39,8 +39,8 @@ velocities_per_y = [] # m/s
 # Store velocity in the test section
 test_section_velocity = (4.713  * MOTOR_SPEED - 1.7961) / 2.237 # m/s
 test_section_velocity_pitot = np.sqrt(((TOTAL_PRESSURE - STATIC_PRESSURE) * 2) / DENSITY) # m/s
-print(f"motor speed calibration: {test_section_velocity} m/s")
-print(f"pitot tube: {test_section_velocity_pitot} m/s")
+# print(f"motor speed calibration: {test_section_velocity} m/s")
+# print(f"pitot tube: {test_section_velocity_pitot} m/s")
 test_section_velocity = test_section_velocity_pitot
 
 # Stores c_d per run using summation of integral terms
@@ -143,8 +143,22 @@ for run in range(18):
     for probe in range(31, 35):
         velocities_per_y[run][probe] = velocities_per_y[run][30]
 
+probe1 = 30
+run = 18
+for probe in range(probe1, 35):
+    velocities_per_y[run][probe] = velocities_per_y[run][probe1 - 1]
 
-# '''
+probe1 = 25
+run = 19
+for probe in range(probe1, 35):
+    velocities_per_y[run][probe] = velocities_per_y[run][probe1 - 1]
+
+probe1 = 17
+run = 20
+for probe in range(probe1, 35):
+    velocities_per_y[run][probe] = velocities_per_y[run][probe1 - 1]
+
+'''
 for probe in range(len(y_values_mm)):
     print(f"probe: {probe} is at height {y_values_mm[probe]} mm")
 # '''
@@ -154,7 +168,7 @@ outof_boundary_probes = []
 outof_boundary_velocities = []
 
 # This should get all the probes where the velocity is >= 99% free stream
-for run in range(11):
+for run in range(12):
     temp_probe = []
     temp_velocity = []
     for probe in range(len(velocities_per_y[0])):
@@ -177,13 +191,17 @@ for run in range(12, 21):
     outof_boundary_probes.append(temp_probe)
     outof_boundary_velocities.append(temp_velocity)
 
+
 first_oob_probe = []
 for run in range(len(outof_boundary_probes)):
     temp = []
     temp.append(outof_boundary_probes[run][0])
     first_oob_probe.append(temp)
 
-print(first_oob_probe)
+
+boundary_thickness = []
+for run in range(len(first_oob_probe)):
+    boundary_thickness.append(y_values[first_oob_probe[run][0]])
 
 
 velocities_norm = []
@@ -265,6 +283,10 @@ def plot_norm_velocity():
         plt.show()
 
 
+x1 = np.arange(1, 11, 1) / 39.37
+x2 = np.arange(10, 65, 5) / 39.37
+x_total = np.concatenate((x1, x2))
+
 x1 = np.arange(1, 11, 1) / 39.37 # m
 x_laminar = np.concatenate((x1, [15 / 39.37, 20 / 39.37])) # m
 x_turbulent = np.arange(20, 65, 5) / 39.37 # m
@@ -279,6 +301,7 @@ d_turbulent = ((.16 * x_turbulent) / Re_turbulent**(1/7)) - ((.16 * x_crit) / (R
 def plot_theoretical_boundary():
     plt.plot(x_laminar, d_laminar)   
     plt.plot(x_turbulent, d_turbulent)   
+    plt.plot(x_total, boundary_thickness)
     plt.suptitle("Theoretical boundary layer thickness")
     plt.xlabel("x distance (m)")
     plt.ylabel("y distance (m)")
@@ -290,7 +313,7 @@ def plot_momentum_thickness():
     plt.plot(x_values, momentum_thickness)
     plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
     plt.xlabel("x distance (m)")
-    plt.ylabel("Momentum Thickness")
+    plt.ylabel("Momentum Thickness(m)")
     plt.grid()
     plt.show()
 
