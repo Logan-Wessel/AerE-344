@@ -57,11 +57,9 @@ x_values = [0]
 x_values_mm = [0]
 for i in range(10):
     x_values.append(x_values[-1] + (1 / 39.3701))
-    x_values_mm.append(x_values_mm[-1] + 25.4)
 
 for i in range(11,21):
     x_values.append(x_values[-1] + 5 * (1 / 39.3701))
-    x_values_mm.append(x_values_mm[-1] + 5 * 25.4)
 
 
 def getAveragePressures(run_number):
@@ -168,6 +166,8 @@ for probe in range(len(y_values_mm)):
 outof_boundary_probes = []
 outof_boundary_velocities = []
 
+#Calulate boundary thickness (del)
+
 # This should get all the probes where the velocity is >= 99% free stream
 for run in range(12):
     temp_probe = []
@@ -205,6 +205,15 @@ for run in range(len(first_oob_probe)):
     boundary_thickness.append(y_values[first_oob_probe[run][0]])
 
 
+y_over_del = []
+
+#creates y over del array
+for run in range(len(boundary_thickness)):
+    temp = []
+    for i in range(len(y_values)):
+        temp.append(y_values[i] / boundary_thickness[run])
+    y_over_del.append(temp)    
+
 velocities_norm = []
 
 # This gets the normalized velocity values for each run
@@ -223,7 +232,7 @@ for run in range(len(velocities_per_y)):
         velocities_norm.append(temp_vel)
 
 
-# Stores momentum thickness per AOA
+# Stores momentum thickness per run
 momentum_thickness = []
 # Stores integral terms for computing c_d
 integral_terms = []
@@ -231,8 +240,8 @@ integral_terms = []
 for run in range(len(velocities_norm)):
     temp_moment = []
     for port in range(len(velocities_norm[0])):
-        temp_moment.append(velocities_norm[run][port] * (1 - velocities_norm[run][port]) * (DELTA_Y * MM_2_M))
-        integral_terms = np.sum(temp_moment)
+        temp_moment.append(velocities_norm[run][port] * (1 - velocities_norm[run][port]) * (DELTA_Y))
+    integral_terms = np.sum(temp_moment)
     momentum_thickness.append(integral_terms)
 
 # Calculations for the theoretical shear stress values
@@ -244,9 +253,15 @@ C_f = []
 for i in range(len(Re_x)):
     C_f.append(.0583 / (Re_x[i]**.2))
 
+coefficient_drag = []
+
+# Computing coefficient of drag
+for run in range(1,21):
+    coefficient_drag.append(2 * momentum_thickness[run] / (x_values[run]))
 
 U_infinity = [test_section_velocity] * len(y_values_mm)
 
+#Plot functions
 def plot_velocity():
     for run in range(11):
         plt.figure(run)
@@ -292,7 +307,28 @@ def plot_norm_velocity():
         plt.grid()
         plt.show()
 
+def plot_y_over_del():
+    for run in range(11):
+        plt.figure(run)
+        plt.plot(velocities_norm[run], y_over_del[run])
+        plt.suptitle("Y/Del vs Normalized Velocity")
+        plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
+        plt.ylabel("Y/Del")
+        plt.xlabel("Normalized Velocity (dimensionless)")
+        plt.grid()
+        plt.show()
 
+    for run in range(12, 21):
+        plt.figure(run)
+        plt.plot(velocities_norm[run], y_over_del[run])
+        plt.suptitle("Y/Del vs Normalized Velocity")
+        plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
+        plt.ylabel("Y/Del")
+        plt.xlabel("Normalized Velocity (dimensionless)")
+        plt.grid()
+        plt.show()
+
+#Laminar and turbulent boundary layers
 x1 = np.arange(1, 11, 1) * 0.02254
 x2 = np.arange(10, 65, 5) * .02254
 x_total = np.concatenate((x1, x2))
@@ -335,11 +371,23 @@ def plot_shear_stress():
     plt.grid()
     plt.show()
 
+def plot_cd():
+    plt.plot(x_values[0:-1], coefficient_drag)
+    plt.suptitle("Coefficient of Drag vs Distance from the Front of the Plate")
+    plt.xlabel("x distance (m)")
+    plt.ylabel("Shear Stress Coefficient (dimensionless)")
+    plt.grid()
+    plt.show()
+
 
 if len(sys.argv) > 1:
     if sys.argv[1] == 'p':
         # plot_velocity()
         # plot_norm_velocity()
-        plot_theoretical_boundary()
+        #plot_y_over_del()
+        #plot_theoretical_boundary()
         plot_momentum_thickness()
-        plot_shear_stress()
+        #plot_shear_stress()
+        plot_cd()
+
+
