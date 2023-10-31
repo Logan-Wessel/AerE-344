@@ -419,50 +419,25 @@ if len(sys.argv) > 1:
 '''
 >>>>>>> eb99e7e811628a5f17d6a387b4f828515a16bfb2
 
-plt.plot(x_values, momentum_thickness_mm)
-plt.suptitle("Momentum Thickness vs Distance from the Front of the Plate")
-plt.xlabel("x distance (m)")
-plt.ylabel("Momentum Thickness (mm)")
-plt.grid()
-plt.show()
-
-plt.plot(x_values[0:-1], skin_friction, label = ('Experimental Friction Coefficient'))
-plt.plot(x_values[0:-1], C_f, label = ('Theoretical Skin Friction Coefficient'))
-plt.suptitle("Shear Stress Coefficient vs Distance from the Front of the Plate")
-plt.xlabel("x distance (m)")
-plt.ylabel("Shear Stress Coefficient (dimensionless)")
-plt.grid()
-plt.legend()
-plt.show()
-
-plt.plot(x_laminar, d_laminar_mm, label = ('Theoretical Laminar Boundary Layer'))   
-plt.plot(x_turbulent, d_turbulent_mm, label = 'Theoretical Turbulent Boundary Layer')   
-plt.plot(x_total, boundary_thickness_mm, label = ('Experimental Boundary Layer'))
-plt.suptitle("Theoretical boundary layer thickness")
-plt.xlabel("x distance (mm)")
-plt.ylabel("y distance (mm)")
-plt.grid()
-plt.legend()
-plt.show()
-
-for run in range(11):
+for run in range(12):
     plt.figure(run)
-    plt.plot(velocities_norm[run], y_values_mm)
-    plt.suptitle("Normalized Velocity vs y Distance from the Plate")
+    plt.plot(velocities_norm[run], y_over_del[run])
+    plt.suptitle("Y/Del vs Normalized Velocity")
     plt.title(f"Distance from Front of Plate: {run*25.4:.2f} mm")
-    plt.ylabel("y distance (mm)")
+    plt.ylabel("Y/Del (dimensionless)")
     plt.xlabel("Normalized Velocity (dimensionless)")
     plt.grid()
     plt.show()
 
-for run in range(12, 21):
+for run in range(13, 21):
     plt.figure(run)
-    plt.plot(velocities_norm[run], y_values_mm)
-    plt.suptitle("Normalized Velocity vs Distance from the Front of the Plate")
+    plt.plot(velocities_norm[run], y_over_del[run])
+    plt.suptitle("Y/Del vs Normalized Velocity")
     plt.title(f"Distance from Front of Plate: {(279.4 + (run - 11) * 5 * 25.4):.2f} mm")
-    plt.ylabel("y distance (mm)")
+    plt.ylabel("Y/Del (dimensionless)")
     plt.xlabel("Normalized Velocity (dimensionless)")
     plt.grid()
     plt.show()
+
 print('Reynolds Number for the last streamwise position: ', Re_x[-1])
 print('Computed CD for last streamwise position: ', coefficient_drag)
