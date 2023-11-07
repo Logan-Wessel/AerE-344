@@ -39,17 +39,19 @@ for time in range(len(Pressures)):
     velocities_points.append(np.sqrt((Pressures[time] + STD_PRES_IM) * 2 / DENSITY))
 
 # print(velocities_points)
-def p_u(p_t):
-    return  p_t * 1 / ((1.4 + 1)/2)**(1.4/.4)
+def Pressure_Total_After_Throat(p_throat):
+    return  p_throat * ((1.4 + 1)/2)**(1.4/.4)
 
-def M_s1(p_ratio):
+def Mach_Up(p_ratio):
     return np.sqrt(((p_ratio**(1/3.5) - 1) / .2))
 
-def M_s2(p_t, M_s1):
+def M2_Across_Shock(M_s1):
     return (1 + (0.2 * M_s1**2)) / (1.4 * M_s1**2 - 0.2)
 
-def
+def Pressure_Total_Downstream(p_s2, M_s2):
+    return p_s2 * ((1 + (0.2 * M_s2))**(1.4 / 0.4))
 
+def Mach_Down
 
 def cr1():
     
