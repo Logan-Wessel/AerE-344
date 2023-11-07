@@ -38,12 +38,12 @@ velocities_points = []
 for time in range(len(Pressures)):
     velocities_points.append(np.sqrt((Pressures[time] + STD_PRES_IM) * 2 / DENSITY))
 
-# print(velocities_points)
+
 def Pressure_Total_After_Throat(p_throat):
     return  p_throat * ((1.4 + 1)/2)**(1.4/.4)
 
-def Mach_Up(p_ratio):
-    return np.sqrt(((p_ratio**(1/3.5) - 1) / .2))
+def Mach_Up(pt1_by_pm):
+    return np.sqrt(((pt1_by_pm**(1/3.5) - 1) / .2))
 
 def M2_Across_Shock(M_s1):
     return (1 + (0.2 * M_s1**2)) / (1.4 * M_s1**2 - 0.2)
@@ -51,9 +51,18 @@ def M2_Across_Shock(M_s1):
 def Pressure_Total_Downstream(p_s2, M_s2):
     return p_s2 * ((1 + (0.2 * M_s2))**(1.4 / 0.4))
 
-def Mach_Down
+def Mach_Down(pt2_by_pm):
+    return (2/0.4) * (((pt2_by_pm)**(0.4/1.4)) - 1)
 
-def cr1():
-    
 
-    pass
+print(Pressures[3,3])
+
+'''throat = []
+for i in range(len(Pressures)):
+    throat.append(Pressures[3,i])'''
+
+
+
+'''print(Pressures[0])
+throat = Pressures[0]
+print(throat[:,1])'''
