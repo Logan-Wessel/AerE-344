@@ -11,10 +11,12 @@ from matplotlib import pyplot as plt
 DENSITY = 1.225                     # kg/m^3
 VISCOSITY = 1.8305e-5               # kg/(m*s)
 STD_PRESSURE = 101325               # Pa
+STD_PRES_IM = 14.6959488            # Psi
 IN_2_MM = 25.4                      # inches to mm
 MM_2_M = 0.001                      # mm ---> m
 SAMPLE_FREQ = 1                  # Hz
-DATA_PATH = os.path.join(os.getcwd(), 'Data')
+
+GAMMA = 1.4
 
 # Throat-domain distances
 throat_axis_inches = [-4.00, -1.50, -0.30, -0.18, 0.00, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.05, 1.20, 1.35, 1.45] # inches
@@ -26,7 +28,7 @@ areas = IN_2_MM**2 * np.ones(len(areas_inches_sq)) * areas_inches_sq
 
 data = pd.read_csv('Data/Section 2.csv', encoding="utf-8")
 
-Used_Ports = list(range(2,15, 1))
+Used_Ports = list(range(2,17, 1))
 Pressures = []
 for i in Used_Ports:
     Pressures.append(data.values[:,i])
@@ -34,7 +36,12 @@ for i in Used_Ports:
 velocities_points = []
 # Computes velocity at y_distances per run
 for time in range(len(Pressures)):
-    temp = []
-    velocities_points.append(np.sqrt(Pressures[time] * 2 / DENSITY))
+    velocities_points.append(np.sqrt((Pressures[time] + STD_PRES_IM) * 2 / DENSITY))
 
-print(velocities_points)
+# print(velocities_points)
+
+
+def cr1():
+    
+
+    pass
