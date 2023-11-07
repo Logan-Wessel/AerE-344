@@ -24,7 +24,7 @@ throat_axis = IN_2_MM * np.ones(len(throat_axis_inches)) * throat_axis_inches
 areas_inches_sq = [0.800, 0.529, 0.480, 0.478, 0.476, 0.497, 0.518, 0.539, 0.560, 0.581, 0.599, 0.616, 0.627, 0.632, 0.634] # in^2
 areas = IN_2_MM**2 * np.ones(len(areas_inches_sq)) * areas_inches_sq
 
-data = pd.read_csv('Data/Section 2.csv', header=None, encoding="utf-8")
+data = pd.read_csv('Data/Section 2.csv', encoding="utf-8")
 
 Used_Ports = list(range(2,15, 1))
 Pressures = []
