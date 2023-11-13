@@ -165,4 +165,4 @@ cython_debug/
 *.jpeg
 *.avi
 
-/Lab10/data/
+/Lab10/bad_data/
